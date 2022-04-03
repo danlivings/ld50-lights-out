@@ -4,7 +4,6 @@ pub mod systems;
 
 mod events;
 mod tick;
-
 use bevy::log;
 use bevy::prelude::*;
 use components::*;
@@ -23,11 +22,13 @@ impl Plugin for BoardPlugin {
         app.insert_resource(TileMap::new());
         app.add_startup_system(Self::setup_camera);
         app.add_startup_system(Self::create_board);
+        app.add_startup_system(scoring::setup_ui);
 
         app.insert_resource(ClearColor(Color::BLACK));
         app.add_system(input::handle_mouse_input);
         app.add_system(lighting::handle_tile_trigger);
         app.add_system(lighting::update);
+        app.add_system(scoring::update_score);
         app.add_system(tile::update_tiles);
         app.add_system(tile::create_new_tiles);
         app.insert_resource(UpdateTickTimer::new(0.1));
@@ -80,6 +81,8 @@ impl BoardPlugin {
     #[cfg(feature = "debug")]
     fn register_inspectables(&self, app: &mut App) {
         app.register_inspectable::<TileComponent>();
+        app.register_inspectable::<Score>();
+        app.register_inspectable::<Coordinates>();
 
         log::info!("Registered inspectable components.");
     }

@@ -24,7 +24,33 @@ This provides an easy way to check the loss condition: if the score does not
 increment at all in a tick, this means that all tiles are black, and the game
 ends.
 
-The specifics of this increment have not yet been determined and are subject to
-balancing, but the potential options are:
-* a flat amount for each non-black tile
-* an amount determined by each tile's lightness.
+The calculation for each tile's score is:
+
+<img src="https://render.githubusercontent.com/render/math?math=\lfloor%20log_2{(lightness%20%2b%201)}\rfloor">
+
+Which gives the following table:
+
+| Tile lightness | Score given |
+|---------------:|------------:|
+| 0              | 0           |
+| 1              | 1           |
+| 2              | 1           |
+| 3              | 2           |
+| 4              | 2           |
+| ...            | ...         |
+| 7              | 3           |
+| 8              | 3           |
+| ...            | ...         |
+| 15             | 4           |
+| 16             | 4           |
+| ...            | ...         |
+| 31             | 5           |
+| 32             | 5           |
+| ...            | ...         |
+| 63             | 6           |
+| 64             | 6           |
+| ...            | ...         |
+| 127            | 7           |
+| 128            | 7           |
+| ...            | ...         |
+| 255            | 8           |

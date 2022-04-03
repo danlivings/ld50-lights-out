@@ -53,6 +53,10 @@ impl TileMap {
         let coordinates: Coordinates = (x, y).into();
 
         if let Some(tile) = self.active_tiles.get_mut(&coordinates) {
+            if tile.is_black() {
+                return;
+            }
+
             tile.lightness = MAX_LIGHTNESS;
 
             for offset in NEIGHBOUR_OFFSETS {
@@ -70,6 +74,13 @@ impl TileMap {
         tiles.into_iter()
             .filter(|(coord, _)| { !existing_tile_coords.contains(coord) })
             .map(|(coord, _)| { coord })
+            .collect()
+    }
+
+    pub fn non_black_tiles(&self) -> Vec<&Tile> {
+        let tiles = &self.active_tiles;
+        tiles.values()
+            .filter(|tile| { tile.is_not_black() })
             .collect()
     }
 
