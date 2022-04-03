@@ -1,26 +1,19 @@
-use crate::components::Score;
+use crate::components::{Score, UiRoot};
+use crate::events::GameOverEvent;
 use crate::resources::Board;
 use crate::tick::UpdateTickTimer;
+use crate::utils::format_number;
 use bevy::prelude::*;
 
-pub fn setup_ui(
+pub fn setup_score_ui(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    mut ui_root_query: Query<&mut UiRoot>,
 ) {
-    commands.spawn_bundle(UiCameraBundle::default());
+    let ui_root = ui_root_query.single_mut();
+    let mut ui_root_entity = commands.entity(ui_root.0);
 
-    commands
-        .spawn_bundle(NodeBundle {
-            style: Style {
-                size: Size::new(Val::Percent(100.), Val::Percent(100.)),
-                justify_content: JustifyContent::SpaceBetween,
-                align_items: AlignItems::FlexEnd,
-                ..Default::default()
-            },
-            color: Color::NONE.into(),
-            ..Default::default()
-        })
-        .insert(Name::new("UI"))
+    ui_root_entity
         .with_children(|parent| {
             parent
                 .spawn_bundle(NodeBundle {
@@ -57,11 +50,24 @@ pub fn setup_ui(
     
 }
 
+pub fn teardown_score_ui(
+    mut commands: Commands,
+    score_query: Query<Entity, With<Score>>,
+    parent_query: Query<&Parent>,
+) {
+    for entity in score_query.iter() {
+        if let Ok(parent) = parent_query.get(entity) {
+            commands.entity(parent.0).despawn_recursive();
+        }
+    }
+}
+
 pub fn update_score(
     board: Res<Board>,
     time: Res<Time>,
     mut timer: ResMut<UpdateTickTimer>,
     mut score_query: Query<(&mut Score, &mut Text)>,
+    mut game_over_evw: EventWriter<GameOverEvent>,
 ) {
     if !timer.0.tick(time.time_since_startup()).just_finished() {
         return;
@@ -78,23 +84,8 @@ pub fn update_score(
 
     score.0 = score.0 + score_increment;
     text.sections[0].value = format!("Score: {}", format_number(score.0));
-}
 
-fn format_number(n: u64) -> String {
-    let n_string = n.to_string();
-
-    let mut chars = vec![];
-
-    let mut i = 0;
-    for n_char in n_string.chars().rev() {
-        if i != 0 && i % 3 == 0 {
-            chars.push(' ');
-        }
-        chars.push(n_char);
-        i = i + 1;
+    if score_increment == 0 {
+        game_over_evw.send(GameOverEvent(score.0));
     }
-
-    chars.into_iter()
-        .rev()
-        .collect()
 }

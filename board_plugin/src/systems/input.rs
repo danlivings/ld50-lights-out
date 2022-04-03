@@ -1,12 +1,13 @@
 use crate::components::MainCamera;
-use crate::events::TileTriggerEvent;
+use crate::events::{TileTriggerEvent, TogglePauseEvent};
 use crate::resources::Board;
 use bevy::input::ElementState;
+use bevy::input::keyboard::{KeyCode, KeyboardInput};
 use bevy::input::mouse::MouseButtonInput;
 use bevy::log;
 use bevy::prelude::*;
 
-pub fn handle_mouse_input (
+pub fn handle_mouse_input(
     windows: Res<Windows>,
     board: Res<Board>,
     camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -35,6 +36,22 @@ pub fn handle_mouse_input (
                 ).into();
 
                 tile_trigger_evw.send(TileTriggerEvent(coordinates));
+            }
+        }
+    }
+}
+
+pub fn handle_keyboard_input(
+    mut keyboard_evr: EventReader<KeyboardInput>,
+    mut toggle_pause_evr: EventWriter<TogglePauseEvent>,
+) {
+    for event in keyboard_evr.iter() {
+        if let ElementState::Released = event.state {
+            if let Some(key_code) = event.key_code {
+                if key_code == KeyCode::Escape || key_code == KeyCode::Space {
+                    toggle_pause_evr.send(TogglePauseEvent);
+                    log::info!("Pause toggled (key code: {:?})", key_code);
+                }
             }
         }
     }
